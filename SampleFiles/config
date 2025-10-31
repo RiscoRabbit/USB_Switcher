@@ -1,0 +1,10 @@
+# Open COM port by TeraTerm, run "prog config" command.
+
+# Configuration file example
+# Protocol setting: BOOT or REPORT
+PROTOCOL=REPORT
+
+# Device ID setting: any integer value
+DEVICEID=0
+
+# Finally, press ctrl-D to save.

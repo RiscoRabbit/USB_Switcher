@@ -1,0 +1,44 @@
+# Build directories
+build/
+*.build/
+a
+a2
+
+# Object files
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.uf2
+*.dis
+*.map
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# IDE files
+.vscode/
+.idea/
+*.sublime-*
+test_ssd1306/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Generated files
+*.pio.h
+generated/
+
+# Dependencies
+_deps/
+
+# Temporary files
+*~
+*.tmp
+*.swp
+*.swo

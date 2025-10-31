@@ -1,0 +1,7 @@
+# Open COM port by TeraTerm, run "prog Meta-A" command.
+
+type("MyID\n", 10)
+sleep(1000)
+type("MyPassword\n", 10)
+
+# Finally, press ctrl-D to save.
