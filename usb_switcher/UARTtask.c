@@ -1,6 +1,7 @@
 #include "UARTtask.h"
 #include "USBtask.h"
 #include "MouseReportParser.h"
+#include "LuaTask.h"
 
 // Static variables for UART task
 static uint8_t uart_buffer[UART_BUFFER_SIZE];
@@ -102,8 +103,17 @@ void uart_process_received_data(void)
                         } */
                     }
                     int dev_id = uart_buffer[1] - '0';
-                    if (dev_id != device_id && dev_id != 0) {
-                        // Not for this device ID
+                    /* if(tud_cdc_connected())
+                    {
+                        char buffer[256];
+                        snprintf(buffer, sizeof(buffer), "UART: dev_id=%d, device_id=%d, buffer=%s\r\n", dev_id, device_id, uart_buffer);
+                        tud_cdc_write_str(buffer);
+                        tud_cdc_write_flush();
+                    } */
+                    
+                    // DeviceID check: process if device_id is 0xFF (accept all) or matches the received dev_id or dev_id is 0
+                    if (device_id != 0xFF && dev_id != device_id && dev_id != 0) {
+                        // Not for this device ID and not in accept-all mode
                         uart_buffer_index = 0;
                         continue;
                     }
@@ -118,24 +128,39 @@ void uart_process_received_data(void)
                         } */
 
                         hid_keyboard_report_t keyboard_report;
-                        keyboard_report.modifier = decoded_data[0];
-                        keyboard_report.reserved = decoded_data[1];
-                        for (int i = 0; i < 6; i++) {
-                            keyboard_report.keycode[i] = decoded_data[2 + i];
-                        }
-
-                        if (uart_parse_keyboard_message((char*)&(uart_buffer[2]), &keyboard_report)) {
+                        
+                        // Use the already decoded data directly
+                        if (decoded_length == 8) {
+                            keyboard_report.modifier = decoded_data[0];
+                            keyboard_report.reserved = decoded_data[1];
+                            for (int i = 0; i < 6; i++) {
+                                keyboard_report.keycode[i] = decoded_data[2 + i];
+                            }
                              // Send keyboard report to host
                             tud_hid_n_keyboard_report(0, 1, keyboard_report.modifier, keyboard_report.keycode);
-                            /* printf("UART: Keyboard report sent to host\n"); */
-                            /* tud_cdc_write_str("UART: Keyboard report sent to host\n");
-                            tud_cdc_write_flush(); */
+                            /* printf("UART: Keyboard report sent to host\n");
+                            if(tud_cdc_connected())
+                            {
+                                char buffer[256];
+                                snprintf(buffer, sizeof(buffer), "UART: Keyboard report sent - mod:0x%02X keys:", keyboard_report.modifier);
+                                tud_cdc_write_str(buffer);
+                                for(int i = 0; i < 6; i++) {
+                                    snprintf(buffer, sizeof(buffer), " 0x%02X", keyboard_report.keycode[i]);
+                                    tud_cdc_write_str(buffer);
+                                }
+                                tud_cdc_write_str("\r\n");
+                                tud_cdc_write_flush();
+                            } */
                             setLEDStateActive();
                         } else {
-                            printf("UART: Failed to parse keyboard message: %s\n", uart_buffer);
-                            /* tud_cdc_write_flush();
-                            tud_cdc_write_str("UART: Failed to parse keyboard message\n"); */
-
+                            /* printf("UART: Invalid keyboard data length: %d\n", decoded_length);
+                            if(tud_cdc_connected())
+                            {
+                                char buffer[256];
+                                snprintf(buffer, sizeof(buffer), "UART: Invalid keyboard data length: %d\r\n", decoded_length);
+                                tud_cdc_write_str(buffer);
+                                tud_cdc_write_flush();
+                            } */
                         }
                     }
 
@@ -180,6 +205,20 @@ void uart_process_received_data(void)
                             printf("UART: Failed to parse gamepad message: %s\n", uart_buffer);
                             tud_cdc_write_str("UART: Failed to parse gamepad message\n");
                             tud_cdc_write_flush();
+                        }
+                    }
+
+                    // Check if this is a control message starting with "C"
+                    if (uart_buffer[0] == 'C')
+                    {
+                        if (strncmp((char*)uart_buffer, "C10", 3) == 0) {
+                            // Set USB_output_switch to 1 (UART mode)
+                            USB_output_switch = 1;
+                            printf("UART: Received C10, USB_output_switch set to 1 (UART mode)\n");
+                        } else if (strncmp((char*)uart_buffer, "C11", 3) == 0) {
+                            // Set USB_output_switch to 0 (USB mode)  
+                            USB_output_switch = 0;
+                            printf("UART: Received C11, USB_output_switch set to 0 (USB mode)\n");
                         }
                     }
 

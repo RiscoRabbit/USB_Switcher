@@ -23,18 +23,19 @@
 
 #include "LuaTask.h"
 #include "OLEDtask.h"
+#include "UARTtask.h"
 
 #include "CDCCmd.h"
 
 //#define USBHost1_Pin_DP 9 // for RiscoRabbit ver 1.0
 //#define USBHost2_Pin_DP 11 // for RiscoRabbit ver 1.0
 
-//#define USBHost1_Pin_DP 14 // for RP2350 USB A
+#define USBHost1_Pin_DP 12 // for RP2350 USB A
 
-#define USBHost1_Pin_DP 6 // for RiscoRabbit ver 1.1
-#define USBHost2_Pin_DP 8 // for RiscoRabbit ver 1.1
-#define USBHost3_Pin_DP 10 // for RiscoRabbit ver 1.1
-#define USBHost4_Pin_DP 12 // for RiscoRabbit ver 1.1
+// #define USBHost1_Pin_DP 6 // for RiscoRabbit ver 1.1
+// #define USBHost2_Pin_DP 8 // for RiscoRabbit ver 1.1
+// #define USBHost3_Pin_DP 10 // for RiscoRabbit ver 1.1
+// #define USBHost4_Pin_DP 12 // for RiscoRabbit ver 1.1
 
 
 //--------------------------------------------------------------------+
@@ -153,6 +154,14 @@ int main(void)
     ws2812_init();
     printf("WS2812 LED initialized on GPIO %d\n", WS2812_PIN);
 
+    // Launch Core1 first so it can be locked as a victim
+    multicore_launch_core1(task1_function);
+    
+    // Wait a bit for Core1 to start
+    sleep_ms(100);
+    
+    // Now lock Core1 as victim while doing file operations
+    multicore_lockout_start_blocking();
     fstask_mount_and_init(); // File system read/write from core1
     // Read configuration file
     read_config_file();
@@ -160,16 +169,17 @@ int main(void)
     scan_and_read_device_definitions();
     // Show the current protocol settings
     show_protocol_settings();
+    multicore_lockout_end_blocking();
 
 
     BaseType_t result;
 
     // Create FreeRTOS tasks for Core0
     
-    if(xTaskCreate(task_lua_function, "Task_Lua", 4096, NULL, 2, NULL) != pdPASS) {
+    /* if(xTaskCreate(task_lua_function, "Task_Lua", 4096, NULL, 2, NULL) != pdPASS) {
         printf("Failed to create Task_Lua\n");
         return 0;
-    }
+    } */
 
     if(xTaskCreate(task_led_function, "Task3_LED", 4096, NULL, 2, NULL) != pdPASS) {
         printf("Failed to create Task_LED\n");
@@ -180,7 +190,7 @@ int main(void)
         printf("Failed to create Task_OLED\n");
         return 0;
     }
-
+    
     if(xTaskCreate(task_tud_function, "Task_TUD", 1024, NULL, 3, NULL) != pdPASS) {
         printf("Failed to create Task_TUD\n");
         return 0;
@@ -191,7 +201,7 @@ int main(void)
         return 0;
     }
     
-    multicore_launch_core1(task1_function);
+    // Core1 was already launched earlier
     // Check if task creation was successful
     vTaskStartScheduler();
 

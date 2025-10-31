@@ -334,12 +334,31 @@ static void handle_meta_key(uint8_t keycode)
         return;
     }
     
+    // Handle special Meta key combinations for USB output switching
+    if (keycode == 0x11) { // N key (keycode 0x11)
+        USB_output_switch = 1;
+        printf("META+N: USB_output_switch set to 1 (UART mode)\n");
+        // Send C11 to UART1
+        uart_puts(uart1, "C11\n");
+        return;
+    } else if (keycode == 0x10) { // M key (keycode 0x10)
+        USB_output_switch = 0;
+        printf("META+M: USB_output_switch set to 0 (USB mode)\n");
+        // Send C10 to UART1
+        uart_puts(uart1, "C10\n");
+        return;
+    }
+    
     // Generate filename in format "Meta-A"
     char filename[16];
     snprintf(filename, sizeof(filename), "Meta-%s", key_str);
     
-    //printf("META Key pressed: %c, checking for script: %s\n", key_char, filename);
+    // Meta mode key press detected but Lua macro execution is disabled
+    printf("META Key pressed: %s (Lua macro execution disabled)\n", key_str);
     
+    // Note: Lua macro execution has been disabled for Meta mode keys
+    // The following code has been commented out to prevent Lua macro execution:
+    /*
     // Check if file exists by trying to read it
     char buffer[1]; // Just check existence, don't need to read content
     int result = fstask_read_file(filename, buffer, 1);
@@ -366,6 +385,7 @@ static void handle_meta_key(uint8_t keycode)
     } else {
         printf("Lua script %s not found\n", filename);
     }
+    */
 }
 
 typedef struct {

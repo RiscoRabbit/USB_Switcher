@@ -1,4 +1,4 @@
-set(target_name usb_hid_switcher)
+set(target_name usb_switcher)
 
 add_executable(${target_name})
 
@@ -9,7 +9,7 @@ pico_enable_stdio_uart(${target_name} 1) # Enable UART stdio as fallback
 set(LOCAL_TINYUSB_PATH ${CMAKE_CURRENT_LIST_DIR}/../tinyusb)
 
 target_sources(${target_name} PRIVATE
-  usb_hid_switcher.c
+  usb_switcher.c
   usb_descriptors.c
   ws2812.c
   LEDtask.c
@@ -32,7 +32,7 @@ target_sources(${target_name} PRIVATE
 )
 
 # Generate PIO header from ws2812.pio
-pico_generate_pio_header(usb_hid_switcher ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
+pico_generate_pio_header(usb_switcher ${CMAKE_CURRENT_LIST_DIR}/ws2812.pio)
 
 
 target_include_directories(${target_name} PUBLIC

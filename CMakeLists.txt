@@ -22,4 +22,4 @@ add_subdirectory(lua)
 add_subdirectory(littlefs)
 
 
-add_subdirectory(usb_hid_switcher)
+add_subdirectory(usb_switcher)

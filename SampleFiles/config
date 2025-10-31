@@ -5,6 +5,6 @@
 PROTOCOL=REPORT
 
 # Device ID setting: any integer value
-DEVICEID=0
+DEVICEID=1
 
 # Finally, press ctrl-D to save.

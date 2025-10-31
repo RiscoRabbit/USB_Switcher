@@ -32,7 +32,7 @@ bool has_gamepad_key = false;
 uint8_t hid_protocol[3] = {1, 1, 1}; // Default to Report mode for all instances
 
 uint8_t default_hid_protocol = USE_DEVICE_PROTOCOL;
-int device_id = 0; // Default device ID
+int device_id = 0xFF; // Default device ID (0xFF = accept all)
 
 /**
  * Function to display current protocol settings
